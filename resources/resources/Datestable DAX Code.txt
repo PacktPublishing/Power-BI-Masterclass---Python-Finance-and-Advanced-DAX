@@ -1,0 +1,63 @@
+Dates = 
+// Here you can specify a start date, or the range of dates in your fact table.
+// If you have multiple fact tables, you can do MIN(MIN('Fact 1'[Date]),MIN('Fact 2'[Date])) etc.
+VAR _startdate =
+    date(2020,1,1)
+    --MIN ( 'Sales'[Order Date] )
+VAR _enddate =
+    date(2023,1,1)-1
+    --MAX ( 'Sales'[Order Date] )
+RETURN
+    ADDCOLUMNS (
+        CALENDAR ( _startdate, _enddate ),
+        // Create DATE VERSIONS of the year, quarter, month, and week
+        // These will need to be formatted in the Column Format ribbon or in the Properties Pane in the Model view
+        // including custom formats, such as mmm yyyy for the month
+        "Yearly", DATE ( YEAR ( [Date] ), 1, 1 ),
+        "Quarterly",
+            DATE ( YEAR ( [Date] ), SWITCH (
+                MONTH ( [Date] ),
+                1, 1,
+                2, 1,
+                3, 1,
+                4, 4,
+                5, 4,
+                6, 4,
+                7, 7,
+                8, 7,
+                9, 7,
+                10, 10,
+                11, 10,
+                12, 10
+            ), 1 ),
+        "Monthly", DATE ( YEAR ( [Date] ), MONTH ( [Date] ), 1 ),
+        "Weekly",
+            [Date] - WEEKDAY ( [Date], 1 ) + 1,
+        // Month and Week OF YEAR to do accurate year over year week compares 
+        "Month of Year", MONTH ( [Date] ),
+        "Week of Year", WEEKNUM ( [Date] ),
+        // Create TEXT VERSIONS of the year, quarter, month, and week
+        // These will need to be sort by date versions above
+        // or the Month of Year to sort correctly
+        "Year", YEAR ( [Date] ),
+        "Quarter", CONCATENATE ( "Q", FORMAT ( QUARTER ( [Date] ), "0" ) ),
+        "Year Quarter", "Q" & FORMAT ( [Date], "q, yyyy" ),
+        "Month", FORMAT ( [Date], "MMM" ),
+        "Year Month", FORMAT ( [Date], "MMM, yyyy" ),
+        "Week",
+            FORMAT ( [Date] - WEEKDAY ( [Date], 1 ) + 1, "dd MMM 'yy" ) & " - "
+                & FORMAT ( ( [Date] - WEEKDAY ( [Date], 1 ) + 1 ) + 6, "dd MMM 'yy" ),
+        // Compared to today fields for when you want to always have say the current show by default
+        "Today Year Offset", DATEDIFF ( TODAY (), [Date], YEAR ),
+        "Today Quarter Offset", DATEDIFF ( TODAY (), [Date], QUARTER ),
+        "Today Month Offset", DATEDIFF ( TODAY (), [Date], MONTH ),
+        "Today Week Offset", DATEDIFF ( TODAY (), [Date], WEEK ),
+        "Today Day Offset", DATEDIFF ( TODAY (), [Date], DAY ),
+        // Text versions of the offsets, you can add in additional values, such as 
+        // -1, "Last Year",
+        "Relative Year", SWITCH ( DATEDIFF ( TODAY (), [Date], YEAR ), 0, "Current Year", "Other" ),
+        "Relative Quarter", SWITCH ( DATEDIFF ( TODAY (), [Date], QUARTER ), 0, "Current Quarter", "Other" ),
+        "Relative Month", SWITCH ( DATEDIFF ( TODAY (), [Date], MONTH ), 0, "Current Month", "Other" ),
+        "Relative Week", SWITCH ( DATEDIFF ( TODAY (), [Date], WEEK ), 0, "Current Week", "Other" ),
+        "Relative Day", SWITCH ( DATEDIFF ( TODAY (), [Date], DAY ), 0, "Current Day", "Other" )
+    )

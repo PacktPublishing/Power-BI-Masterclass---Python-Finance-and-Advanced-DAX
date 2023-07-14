@@ -1,0 +1,7 @@
+Excel.Workbook([Content])
+
+Table.PromoteHeaders([Data])
+
+AllHeaders = List.Union(List.Transform(#"Promote Headers", each Table.ColumnNames(_)))
+in
+    AllHeaders
